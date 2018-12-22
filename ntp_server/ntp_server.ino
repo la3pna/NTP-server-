@@ -121,8 +121,8 @@ delay(1000);
 
  
   // start Ethernet and UDP:
- // Ethernet.begin(mac,ip); // for IP
-  Ethernet.begin(mac); // for DHCP
+   Ethernet.begin(mac,ip); // for IP
+  //Ethernet.begin(mac); // for DHCP
   Udp.begin(NTP_PORT);
 
  server.begin();
