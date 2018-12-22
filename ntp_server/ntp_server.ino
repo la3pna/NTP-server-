@@ -11,8 +11,10 @@
  *                      Invert order of NTP and GPS polling
  *                      Minor trivial changes
  *                      
- *                      added webserver for checking status
- *                      should put ip-addresses into a array, then to iterate over the array, just add the last one to the top. 
+ *            LA3PNA:   Added webserver for checking status
+ *     Modifications:   IP of connected items listed at status page. 
+ *                      OLED display at front panel using U8G2lib.
+ *                      
  */
 
 /*
@@ -21,6 +23,10 @@
  This code is in the public domain.
  */
 
+#include <U8g2lib.h>
+#include <U8x8lib.h>
+#include <avr/dtostrf.h>
+#include <Wire.h>
 
 #define vers "NTP GPS V01A (Rev.LM)"
 
@@ -43,7 +49,6 @@ byte mac[] = {                    // LM: Substitute fake MAC address associated 
 // NTP Server IP Address
 IPAddress ip(192, 168, 2, 177);   // LM: DHCP address assigned by Asus router.  Change this
                                   //     as appropriate for the implementation context.
-
 EthernetServer server(80);
 
 static const int NTP_PACKET_SIZE = 48;
@@ -51,6 +56,7 @@ static const int NTP_PACKET_SIZE = 48;
 // buffers for receiving and sending data
 byte packetBuffer[NTP_PACKET_SIZE]; 
 String receivedIP[10];
+String localIp;
 
 // An Ethernet UDP instance 
 EthernetUDP Udp;
@@ -83,6 +89,8 @@ const boolean MYDEBUG = true;
  #error "This program will only work on SAMD series boards like Empyrean and Zero"
 #endif
 
+U8G2_SSD1306_128X32_UNIVISION_1_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE, /* clock=*/ SCL, /* data=*/ SDA);   // pin remapping with ESP8266 HW I2C
+
 void setup() {
 
 delay(1000);
@@ -98,10 +106,23 @@ delay(1000);
   SerialUSB.print("Version:");
   SerialUSB.println(vers);
 //#endif
+ 
+ /*
+  u8g2.begin(); //somehow this is blocking?
 
+ u8g2.firstPage();
+  do {
+    u8g2.setFont(u8g2_font_ncenB08_tr);
+    char buf[12] ="";
+    u8g2.drawStr(0,8,"LA3PNA NTP + GPSDO");
+    
+  } while ( u8g2.nextPage() );
+ */
+
+ 
   // start Ethernet and UDP:
-  Ethernet.begin(mac,ip); // for IP
-//Ethernet.begin(mac); // for DHCP
+ // Ethernet.begin(mac,ip); // for IP
+  Ethernet.begin(mac); // for DHCP
   Udp.begin(NTP_PORT);
 
  server.begin();
@@ -116,7 +137,25 @@ delay(1000);
 //  Serial1.write("$PUBX,40,GGA,0,0,0,0,0,0*5A\r\n");   // Fix information 
 //  Serial1.write("$PUBX,40,GSA,0,0,0,0,0,0*4E\r\n");   // Overall satellite data
 
+
+    IPAddress Local = Ethernet.localIP();
+    String templip = "";
+    templip.concat(Local[0]);
+    templip = templip + '.';
+    templip.concat(Local[1]);
+    templip = templip + '.';
+    templip.concat(Local[2]);
+   templip = templip + '.';
+    templip.concat(Local[3]);
+    localIp = templip;
+    
+    draw(localIp);
+
+SerialUSB.print("IP address: ");
+SerialUSB.println(localIp);
+
 SerialUSB.println("setup ok");
+delay(10000);
 }
 
 
@@ -126,9 +165,8 @@ void loop() { // Original loop received data from GPS continuously (i.e. per sec
               // and called processNTP() when valid data were received (i.e. on the second).
               // This revision monitors NTP port continuously and attempts to retrieve
               // GPS data whenever an NTP request is received.
-              listenForIncomming();
-            //  SerialUSB.println("ListenForIncomming passed");
-  processNTP();
+ listenForIncomming();
+ processNTP();
 }
 
 ////////////////////////////////////////
@@ -572,3 +610,21 @@ void addIPtolist(String ip){
         }
       receivedIP[0] = ip;
   }
+
+  void draw(String localip) {
+  // graphic commands to redraw the complete screen should be placed here
+/*
+  u8g2.firstPage();
+  do {
+    u8g2.setFont(u8g2_font_ncenB08_tr);
+    char buf[12] ="";
+    u8g2.setCursor(70,25);
+     u8g2.print(localip);
+   // u8g2.drawStr(70,25,dtostrf(temp2, 4, 2, buf));
+    //u8g2.setFont(u8g2_font_ncenB08_tr);
+    u8g2.drawStr(0,8,"1:");
+    u8g2.drawStr(70,8,"2:");
+    
+  } while ( u8g2.nextPage() );*/
+}
+
