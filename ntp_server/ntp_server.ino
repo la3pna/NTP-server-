@@ -23,13 +23,13 @@
  This code is in the public domain.
  */
 
-#include <U8g2lib.h>
-#include <U8x8lib.h>
-#include <avr/dtostrf.h>
-#include <Wire.h>
+//#include <U8g2lib.h>
+//#include <U8x8lib.h>
+//#include <avr/dtostrf.h>
+//#include <Wire.h>
 
 #define vers "NTP GPS V01A (Rev.LM)"
-
+#define W5100_ETHERNET_SHIELD
 #define debug true
 
 #include <SPI.h>                  // needed for Arduino versions later than 0018
@@ -89,18 +89,20 @@ const boolean MYDEBUG = true;
  #error "This program will only work on SAMD series boards like Empyrean and Zero"
 #endif
 
-U8G2_SSD1306_128X32_UNIVISION_1_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE, /* clock=*/ SCL, /* data=*/ SDA);   // pin remapping with ESP8266 HW I2C
+// U8G2_SSD1306_128X32_UNIVISION_1_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE, /* clock=*/ SCL, /* data=*/ SDA);   // pin remapping with ESP8266 HW I2C
 
 void setup() {
 
-delay(1000);
+delay(2000);
 
 //#if true                 // LM: Was #if debug
   SerialUSB.begin(9600);    // LM: Was 115200 
 //#endif
 
 //  Serial1.begin(9600); // start GPS (software serial)
-
+  while (!SerialUSB) {
+    ; // wait for SerialUSB port to connect. Needed for native USB port only
+  }
 
 //#if debug
   SerialUSB.print("Version:");
@@ -119,10 +121,10 @@ delay(1000);
   } while ( u8g2.nextPage() );
  */
 
- 
+ Ethernet.init(10);
   // start Ethernet and UDP:
    Ethernet.begin(mac,ip); // for IP
-  //Ethernet.begin(mac); // for DHCP
+  // Ethernet.begin(mac); // for DHCP
   Udp.begin(NTP_PORT);
 
  server.begin();
@@ -149,11 +151,11 @@ delay(1000);
     templip.concat(Local[3]);
     localIp = templip;
     
-    draw(localIp);
+  //  draw(localIp);
 
 SerialUSB.print("IP address: ");
 SerialUSB.println(localIp);
-
+SerialUSB.println(ip);
 SerialUSB.println("setup ok");
 delay(10000);
 }
