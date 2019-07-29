@@ -121,13 +121,13 @@ delay(2000);
   } while ( u8g2.nextPage() );
  */
 
- Ethernet.init(10);
+ //Ethernet.init(10);
   // start Ethernet and UDP:
-   Ethernet.begin(mac,ip); // for IP
-  // Ethernet.begin(mac); // for DHCP
-  Udp.begin(NTP_PORT);
-
- server.begin();
+  
+  // Ethernet.begin(mac,ip); // for IP
+ //  Ethernet.begin(mac); // for DHCP
+ // Udp.begin(NTP_PORT);
+ //server.begin();
  
   // Disable everything but $GNRMC
   // Note the following sentences are for UBLOX NEO6MV2 GPS 
@@ -346,9 +346,9 @@ void processNTP() {
 bool getgps()
 {
   char c;
-  while (Serial1.available())
+  while (Serial.available())
   {
-    c = Serial1.read();
+    c = Serial.read();
 #if debug
     SerialUSB.write(c);// GPS data flowing
 #endif
